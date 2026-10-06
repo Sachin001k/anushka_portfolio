@@ -1,0 +1,23 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Old Wix addresses → new pages, so existing links keep working.
+[[redirects]]
+  from = "/research-hub"
+  to = "/cookbook/"
+  status = 301
+
+[[redirects]]
+  from = "/about"
+  to = "/join-us/"
+  status = 301
+
+# Images, fonts and PDFs rarely change — let browsers cache them.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

@@ -1,0 +1,24 @@
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__logo" href="/" aria-label="The Daily Digest — home">
+      <img src="/assets/images/logo.webp" alt="The Daily Digest" width="275" height="107">
+    </a>
+    <a class="site-header__name" href="/">Anushka Bahorey</a>
+    <button class="site-header__menu-btn" type="button" aria-expanded="false" aria-controls="site-menu">+Menu</button>
+  </div>
+  <nav class="topnav" aria-label="Main">
+    <ul>
+{{nav}}
+    </ul>
+  </nav>
+</header>
+<div class="site-menu" id="site-menu" hidden>
+  <button class="site-menu__close" type="button" aria-label="Close menu">
+    <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M3 3l18 18M21 3L3 21" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+  </button>
+  <nav aria-label="Main (mobile)">
+    <ul>
+{{nav}}
+    </ul>
+  </nav>
+</div>

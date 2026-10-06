@@ -1,0 +1,19 @@
+---
+title: Blog | Daily Digest
+description: Concise, science-backed reads on gut health, nutrition, sport and Indian food by Anushka Bahorey.
+nav: blog
+---
+<section class="blog">
+  <a class="crumb" href="/blog/">All Posts</a>
+  <h1 class="blog__title display">All Posts</h1>
+{{#if-gallery press}}
+  <aside class="press" aria-labelledby="press-title">
+    <h2 class="press__title display" id="press-title">Published in My Powai</h2>
+    <p>My articles appear in print in <em>My Powai</em> magazine. Open any issue to read it.</p>
+    {{gallery press}}
+  </aside>
+{{/if-gallery}}
+  <div class="post-list">
+{{posts}}
+  </div>
+</section>
