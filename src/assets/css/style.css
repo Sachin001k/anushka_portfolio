@@ -967,3 +967,53 @@ main { flex: 1; }
 .press .gallery > * { flex: 0 0 150px; scroll-snap-align: start; }
 .press__hint { font-size: 13px; color: var(--green-600); margin-top: 4px; }
 @media (max-width: 700px) { .press .gallery > * { flex-basis: 128px; } }
+
+/* =========================================================
+   Buttons — one consistent pill style across the site
+   ========================================================= */
+.btn {
+  min-width: 0; min-height: 46px; padding: 12px 28px;
+  border-radius: 100px; border: 1px solid transparent;
+  font-size: 15px; font-weight: 500; letter-spacing: .04em; gap: 10px;
+}
+.btn--outline { border-color: var(--green-900); color: var(--green-900); letter-spacing: .04em; }
+/* External links get a small ↗ that nudges on hover */
+.btn[target='_blank']::after { content: '↗'; font-size: 14px; transition: transform .2s ease; }
+.btn[target='_blank']:hover::after { transform: translate(2px, -2px); }
+/* On dark green sections: light outline that fills on hover */
+.featured .btn, .paper:not(.paper--sage) .btn, .sessions .btn {
+  background: transparent; color: var(--cream); border-color: rgba(243, 241, 237, .6);
+}
+.featured .btn:hover, .paper:not(.paper--sage) .btn:hover, .sessions .btn:hover {
+  background: var(--cream); color: var(--green-900); border-color: var(--cream);
+}
+/* On light sections: solid green that darkens on hover */
+.paper--sage .btn, .book .btn { background: var(--green-900); color: var(--cream); }
+.paper--sage .btn:hover, .book .btn:hover { background: var(--green-600); }
+.book__buttons { justify-content: center; gap: 16px; padding: 0; }
+
+/* =========================================================
+   Research papers — abstract card with buttons underneath
+   ========================================================= */
+.paper__row {
+  display: block; max-width: 860px; margin: 36px auto 0; padding: 0 16px;
+}
+.paper__abstract {
+  padding: 34px 40px 36px; border-radius: 18px;
+  background: rgba(243, 241, 237, .06); border: 1px solid rgba(243, 241, 237, .18);
+  font-size: 19px; line-height: 1.6;
+}
+.paper--sage .paper__abstract { background: rgba(255, 255, 255, .45); border-color: rgba(8, 67, 30, .15); }
+.paper__abstract h3 {
+  text-align: left; text-decoration: none; font-family: var(--f-sans); font-weight: 600;
+  font-size: 13px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; opacity: .85;
+}
+.paper__links,
+.paper--sage .paper__links {
+  flex-direction: row; justify-content: center; align-items: center; flex-wrap: wrap;
+  gap: 16px; padding-top: 30px;
+}
+@media (max-width: 700px) {
+  .paper__abstract { padding: 22px 20px 24px; font-size: 17px; }
+  .paper__links .btn { flex: 1 1 100%; }
+}
