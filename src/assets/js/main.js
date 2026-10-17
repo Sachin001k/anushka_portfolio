@@ -431,6 +431,8 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
     // start fetching the library as soon as someone shows intent
     a.addEventListener('pointerenter', loadPdfjs, { once: true });
   });
+  // …or quietly in the background once the page has finished loading
+  window.addEventListener('load', () => (window.requestIdleCallback || setTimeout)(() => loadPdfjs(), { timeout: 3000 }));
 
   dialog.addEventListener('close', () => {
     document.documentElement.classList.remove('menu-open');
