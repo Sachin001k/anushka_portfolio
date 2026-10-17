@@ -32,3 +32,10 @@
   [headers.values]
     Content-Type = "text/javascript; charset=utf-8"
     Cache-Control = "public, max-age=2592000"
+
+# Don't compress PDFs: compression stops the in-site viewer from loading just the
+# pages it needs (byte-range requests), forcing a full 20 MB download first.
+[[headers]]
+  for = "/*.pdf"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, no-transform"
