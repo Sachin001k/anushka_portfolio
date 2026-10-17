@@ -381,6 +381,30 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
     zoomEl.textContent = `${Math.round(zoom * 100)}%`;
   }
 
+  // Fetch the PDF in pieces (HTTP range requests) so only the pages being viewed
+  // are downloaded. The host compresses whole-file downloads, which would otherwise
+  // force PDF.js to fetch the entire file first. Falls back to a plain URL.
+  const CHUNK = 256 * 1024;
+  async function sourceFor(pdfjs, url) {
+    try {
+      const first = await fetch(url, { headers: { Range: `bytes=0-${CHUNK - 1}` } });
+      const total = Number((first.headers.get('Content-Range') || '').split('/')[1]);
+      if (first.status !== 206 || !total) throw new Error('no ranges');
+      const initial = new Uint8Array(await first.arrayBuffer());
+      if (initial.length >= total) return { data: initial };
+      const transport = new pdfjs.PDFDataRangeTransport(total, initial);
+      transport.requestDataRange = (begin, end) => {
+        fetch(url, { headers: { Range: `bytes=${begin}-${end - 1}` } })
+          .then((r) => r.arrayBuffer())
+          .then((buf) => transport.onDataRange(begin, new Uint8Array(buf)))
+          .catch(() => {});
+      };
+      return { range: transport, rangeChunkSize: CHUNK, disableAutoFetch: true };
+    } catch {
+      return { url, disableAutoFetch: true };
+    }
+  }
+
   async function open(a) {
     currentHref = a.href;
     nameEl.textContent = titleFor(a);
@@ -395,9 +419,9 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
     body.scrollTop = 0;
     try {
       const pdfjs = await loadPdfjs();
-      loadingTask = pdfjs.getDocument({ url: a.href, disableAutoFetch: true, disableStream: false });
+      loadingTask = pdfjs.getDocument(await sourceFor(pdfjs, a.href));
       loadingTask.onProgress = ({ loaded, total }) => {
-        if (total) msg.textContent = `Loading… ${Math.min(99, Math.round((loaded / total) * 100))}%`;
+        if (total && loaded < total) msg.textContent = `Loading… ${Math.round((loaded / total) * 100)}%`;
       };
       doc = await loadingTask.promise;
       if (currentHref !== a.href) return;

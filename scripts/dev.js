@@ -62,7 +62,21 @@ http
       return res.end();
     }
     const type = TYPES[path.extname(file)] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': type });
+    // Byte-range requests (used by the in-site PDF viewer), like Netlify supports.
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (range && !type.startsWith('text/html')) {
+      const size = fs.statSync(file).size;
+      const start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+      const end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      res.writeHead(206, {
+        'Content-Type': type,
+        'Content-Range': `bytes ${start}-${end}/${size}`,
+        'Content-Length': end - start + 1,
+        'Accept-Ranges': 'bytes',
+      });
+      return fs.createReadStream(file, { start, end }).pipe(res);
+    }
+    res.writeHead(200, { 'Content-Type': type, 'Accept-Ranges': 'bytes' });
     if (watch && type.startsWith('text/html')) {
       return res.end(fs.readFileSync(file, 'utf8').replace('</body>', `${RELOAD}</body>`));
     }
