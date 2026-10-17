@@ -256,3 +256,209 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
     }
   });
 })();
+
+// ---------- In-site PDF viewer ----------
+// Every link to a PDF on this site opens in a styled viewer (rendered with PDF.js)
+// instead of the browser's own PDF screen. Pages load as you scroll, so even the
+// 20 MB magazines start showing quickly. Falls back to a normal new tab on error.
+(() => {
+  const isSitePdf = (a) => {
+    try {
+      const u = new URL(a.href, location.href);
+      return u.origin === location.origin && u.pathname.toLowerCase().endsWith('.pdf');
+    } catch {
+      return false;
+    }
+  };
+  const links = [...document.querySelectorAll('a[href]')].filter(isSitePdf);
+  if (!links.length || !('HTMLDialogElement' in window)) return;
+
+  const PDFJS = '/assets/vendor/pdfjs/pdf.min.mjs';
+  const WORKER = '/assets/vendor/pdfjs/pdf.worker.min.mjs';
+  let pdfjsPromise;
+  const loadPdfjs = () =>
+    (pdfjsPromise ||= import(PDFJS).then((lib) => {
+      lib.GlobalWorkerOptions.workerSrc = WORKER;
+      return lib;
+    }));
+
+  const dialog = document.createElement('dialog');
+  dialog.className = 'pdfv';
+  dialog.innerHTML = `
+    <div class="pdfv__bar">
+      <div class="pdfv__title"><span class="pdfv__badge" aria-hidden="true">PDF</span><span class="pdfv__name"></span></div>
+      <div class="pdfv__controls">
+        <span class="pdfv__pages" aria-live="polite"></span>
+        <button type="button" class="pdfv__btn" data-act="out" aria-label="Zoom out">−</button>
+        <span class="pdfv__zoom">100%</span>
+        <button type="button" class="pdfv__btn" data-act="in" aria-label="Zoom in">+</button>
+        <a class="pdfv__btn pdfv__btn--wide" data-act="download" download aria-label="Download PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>
+          <span>Download</span>
+        </a>
+        <button type="button" class="pdfv__btn pdfv__close" data-act="close" aria-label="Close">×</button>
+      </div>
+    </div>
+    <div class="pdfv__body" tabindex="0">
+      <div class="pdfv__status"><span class="pdfv__spinner" aria-hidden="true"></span><span class="pdfv__msg">Opening…</span></div>
+      <div class="pdfv__pagesWrap"></div>
+    </div>`;
+  document.body.appendChild(dialog);
+
+  const nameEl = dialog.querySelector('.pdfv__name');
+  const pagesEl = dialog.querySelector('.pdfv__pages');
+  const zoomEl = dialog.querySelector('.pdfv__zoom');
+  const body = dialog.querySelector('.pdfv__body');
+  const wrap = dialog.querySelector('.pdfv__pagesWrap');
+  const status = dialog.querySelector('.pdfv__status');
+  const msg = dialog.querySelector('.pdfv__msg');
+  const dl = dialog.querySelector('[data-act="download"]');
+
+  let doc = null;
+  let loadingTask = null;
+  let zoom = 1;
+  let observer = null;
+  let pageObserver = null;
+  let currentHref = '';
+
+  const titleFor = (a) => {
+    const t =
+      a.querySelector('.gallery__pdf-label, .post-pdf__name')?.textContent ||
+      a.textContent ||
+      decodeURIComponent(a.pathname.split('/').pop());
+    return t.replace(/\s+/g, ' ').replace(/^PDF\s*/, '').replace(/(View|Download) PDF.*$/, '').replace(/\.pdf$/i, '').trim() || 'Document';
+  };
+
+  const baseWidth = () => Math.min(body.clientWidth - 32, 920);
+
+  async function renderPage(slot) {
+    if (slot.dataset.state) return;
+    slot.dataset.state = 'rendering';
+    const page = await doc.getPage(Number(slot.dataset.page));
+    const unscaled = page.getViewport({ scale: 1 });
+    const cssWidth = baseWidth() * zoom;
+    const scale = cssWidth / unscaled.width;
+    const viewport = page.getViewport({ scale: scale * Math.min(window.devicePixelRatio || 1, 2) });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    slot.style.width = `${cssWidth}px`;
+    slot.style.aspectRatio = `${unscaled.width} / ${unscaled.height}`;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    slot.replaceChildren(canvas);
+    slot.dataset.state = 'done';
+  }
+
+  function layoutPages(firstAspect) {
+    observer?.disconnect();
+    pageObserver?.disconnect();
+    wrap.replaceChildren();
+    const width = baseWidth() * zoom;
+    for (let i = 1; i <= doc.numPages; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'pdfv__page';
+      slot.dataset.page = i;
+      slot.style.width = `${width}px`;
+      slot.style.aspectRatio = firstAspect;
+      slot.innerHTML = `<span class="pdfv__pageNum">${i}</span>`;
+      wrap.appendChild(slot);
+    }
+    observer = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && renderPage(e.target).catch(() => {})),
+      { root: body, rootMargin: '800px 0px' },
+    );
+    pageObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) pagesEl.textContent = `Page ${visible.target.dataset.page} of ${doc.numPages}`;
+      },
+      { root: body, threshold: [0.25, 0.5, 0.75] },
+    );
+    wrap.querySelectorAll('.pdfv__page').forEach((s) => {
+      observer.observe(s);
+      pageObserver.observe(s);
+    });
+    zoomEl.textContent = `${Math.round(zoom * 100)}%`;
+  }
+
+  async function open(a) {
+    currentHref = a.href;
+    nameEl.textContent = titleFor(a);
+    dl.href = a.href;
+    pagesEl.textContent = '';
+    wrap.replaceChildren();
+    status.hidden = false;
+    msg.textContent = 'Opening…';
+    zoom = 1;
+    dialog.showModal();
+    document.documentElement.classList.add('menu-open');
+    body.scrollTop = 0;
+    try {
+      const pdfjs = await loadPdfjs();
+      loadingTask = pdfjs.getDocument({ url: a.href, disableAutoFetch: true, disableStream: false });
+      loadingTask.onProgress = ({ loaded, total }) => {
+        if (total) msg.textContent = `Loading… ${Math.min(99, Math.round((loaded / total) * 100))}%`;
+      };
+      doc = await loadingTask.promise;
+      if (currentHref !== a.href) return;
+      const first = await doc.getPage(1);
+      const v = first.getViewport({ scale: 1 });
+      status.hidden = true;
+      pagesEl.textContent = `Page 1 of ${doc.numPages}`;
+      layoutPages(`${v.width} / ${v.height}`);
+    } catch (err) {
+      dialog.close();
+      window.open(a.href, '_blank', 'noopener');
+    }
+  }
+
+  function close() {
+    observer?.disconnect();
+    pageObserver?.disconnect();
+    loadingTask?.destroy();
+    doc = null;
+    loadingTask = null;
+    currentHref = '';
+    wrap.replaceChildren();
+  }
+
+  links.forEach((a) => {
+    a.addEventListener('click', (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // allow "open in new tab"
+      e.preventDefault();
+      open(a);
+    });
+    // start fetching the library as soon as someone shows intent
+    a.addEventListener('pointerenter', loadPdfjs, { once: true });
+  });
+
+  dialog.addEventListener('close', () => {
+    document.documentElement.classList.remove('menu-open');
+    close();
+  });
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+  dialog.querySelector('[data-act="close"]').addEventListener('click', () => dialog.close());
+
+  const setZoom = (z) => {
+    if (!doc) return;
+    const ratio = body.scrollTop / Math.max(1, body.scrollHeight);
+    zoom = Math.min(2.5, Math.max(0.5, Math.round(z * 100) / 100));
+    const first = wrap.firstElementChild;
+    layoutPages(first?.style.aspectRatio || '3 / 4');
+    body.scrollTop = ratio * body.scrollHeight;
+  };
+  dialog.querySelector('[data-act="in"]').addEventListener('click', () => setZoom(zoom + 0.25));
+  dialog.querySelector('[data-act="out"]').addEventListener('click', () => setZoom(zoom - 0.25));
+  dialog.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+')) { e.preventDefault(); setZoom(zoom + 0.25); }
+    if ((e.metaKey || e.ctrlKey) && e.key === '-') { e.preventDefault(); setZoom(zoom - 0.25); }
+  });
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    if (!dialog.open || !doc) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => setZoom(zoom), 200);
+  });
+})();
