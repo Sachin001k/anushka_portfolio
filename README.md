@@ -132,6 +132,9 @@ without JavaScript, and animations switch off for visitors who've turned on "red
 - The blog has live search, a scrollable row of *My Powai* issues, and a reading-progress bar on posts.
 - Cards, photos and buttons respond on hover. The phone menu animates in.
 - The footer on every page links to LinkedIn and email.
+- Every PDF opens in an in-site viewer (page count, zoom, download, close) instead of the browser's PDF screen.
+  `npm run images` pre-renders each PDF's pages as images (`<name>.pages/`), so even the 20 MB magazines open
+  in about a second. A PDF added without running it still opens, using PDF.js (slower for big files).
 
 ## Differences from the Wix version
 
