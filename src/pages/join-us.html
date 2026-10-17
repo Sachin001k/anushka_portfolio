@@ -20,15 +20,15 @@ nav: join
   <!-- Submissions are collected by Netlify Forms (see README). -->
   <form class="join-form" name="community-head" method="POST" action="/thank-you/" data-netlify="true" netlify-honeypot="company">
     <input type="hidden" name="form-name" value="community-head">
-    <p class="hp"><label>Leave this empty <input name="company" tabindex="-1" autocomplete="off"></label></p>
+    <p class="hp"><label>Leave this empty <input type="text" name="company" tabindex="-1" autocomplete="off"></label></p>
     <div class="join-form__grid">
       <div>
         <label for="f-first">First name *</label>
-        <input id="f-first" name="first_name" autocomplete="given-name" required>
+        <input id="f-first" type="text" name="first_name" autocomplete="given-name" required>
       </div>
       <div>
         <label for="f-last">Last name</label>
-        <input id="f-last" name="last_name" autocomplete="family-name">
+        <input id="f-last" type="text" name="last_name" autocomplete="family-name">
       </div>
       <div>
         <label for="f-email">Email *</label>

@@ -13,7 +13,7 @@ In a world dominated by fast food chains, fusion menus, and international cuisin
 
 This change is not just about nostalgia. It is about health, identity, and sustainability. Many young adults, increasingly aware of the ill effects of processed food, are embracing the nutrient-rich, minimally processed meals that their families once ate daily.
 
-Ancient grains like ragi, jowar, and bajra are making their way back onto plates. Fermented dishes such as idli, dhokla, and kanji are being celebrated not just for their flavour but for their probiotic benefits. [Social](http://benefits.Social) media has played an interesting role in this revival. Food bloggers and influencers are reviving traditional recipes in visually appealing ways, sharing the stories behind them, and demonstrating how they can be incorporated into modern lifestyles. Farmers’ markets and organic food stores are also enabling access to local ingredients that were once on the verge of fading from memory.
+Ancient grains like ragi, jowar, and bajra are making their way back onto plates. Fermented dishes such as idli, dhokla, and kanji are being celebrated not just for their flavour but for their probiotic benefits. Social media has played an interesting role in this revival. Food bloggers and influencers are reviving traditional recipes in visually appealing ways, sharing the stories behind them, and demonstrating how they can be incorporated into modern lifestyles. Farmers’ markets and organic food stores are also enabling access to local ingredients that were once on the verge of fading from memory.
 
 ![](/assets/images/blog/back-to-the-roots-how-youth-are-rediscovering-traditional-food.webp)
 

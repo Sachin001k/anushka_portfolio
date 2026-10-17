@@ -121,6 +121,18 @@ The form only works on the deployed Netlify site. Locally, it shows an error mes
 - Update `SITE.url` in `scripts/build.js` to the new address so the blog share buttons link to the right place.
 - The old Wix site and the PDFs hosted there are no longer needed. Everything is in this repo.
 
+## Interactive features
+
+All in `src/assets/js/main.js` and the "Interactions" part of `style.css`. The site still works fully
+without JavaScript, and animations switch off for visitors who've turned on "reduce motion".
+
+- Sections fade up as you scroll, and the Impact numbers count up.
+- The header gets a shadow on scroll, and a back-to-top button appears on long pages.
+- Gallery photos open in a viewer with ← → arrows, keyboard arrows, swipe and a "3 / 8" counter.
+- The blog has live search, a scrollable row of *My Powai* issues, and a reading-progress bar on posts.
+- Cards, photos and buttons respond on hover. The phone menu animates in.
+- The footer on every page links to LinkedIn and email.
+
 ## Differences from the Wix version
 
 - Fonts are free Google Fonts: Fraunces, Figtree, EB Garamond, Aboreto and Jost.

@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import { marked } from 'marked';
 import sizeOf from 'image-size';
+import crypto from 'node:crypto';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(root, 'src');
@@ -27,7 +28,7 @@ const DEV = Boolean(process.env.DEV);
 
 const SITE = {
   name: 'Daily Digest',
-  url: 'https://anushkabahorey.wixsite.com/daily-digest', // update after moving to the new domain
+  url: 'https://anushka-daily-digest.netlify.app', // change here if you move to your own domain
 };
 
 const NAV = [
@@ -129,7 +130,13 @@ function renderGallery(name) {
   return `<div class="gallery gallery--${name}">\n${items.join('\n')}\n</div>`;
 }
 
-const layout = withPartials(read(path.join(SRC, 'layout.html')));
+// Add a content hash to the CSS/JS links (style.css?v=1a2b3c4d) so browsers fetch
+// the new file after every change instead of using a cached old copy.
+const assetVersion = (rel) =>
+  crypto.createHash('md5').update(fs.readFileSync(path.join(SRC, 'assets', rel))).digest('hex').slice(0, 8);
+const layout = withPartials(read(path.join(SRC, 'layout.html')))
+  .replace('/assets/css/style.css', `/assets/css/style.css?v=${assetVersion('css/style.css')}`)
+  .replace('/assets/js/main.js', `/assets/js/main.js?v=${assetVersion('js/main.js')}`);
 
 function renderNav(active) {
   return NAV.map(
@@ -137,8 +144,14 @@ function renderNav(active) {
   ).join('\n');
 }
 
+const sitemapUrls = [];
+
 function writePage(urlPath, { title, description = '', nav = '', body, bodyClass = '' }) {
+  const pagePath = urlPath ? `/${urlPath.replace(/\/$/, '')}/` : '/';
+  if (!['/404/', '/thank-you/'].includes(pagePath)) sitemapUrls.push(pagePath);
   const html = fill(layout, {
+    canonical: SITE.url + pagePath,
+    siteUrl: SITE.url,
     title: escapeHtml(title),
     description: escapeHtml(description),
     nav: renderNav(nav),
@@ -285,6 +298,13 @@ export function build() {
   buildPages();
   const posts = loadPosts();
   buildBlog(posts);
+  fs.writeFileSync(
+    path.join(DIST, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls
+      .map((u) => `  <url><loc>${SITE.url}${u}</loc></url>`)
+      .join('\n')}\n</urlset>\n`,
+  );
+  fs.writeFileSync(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE.url}/sitemap.xml\n`);
   console.log(`Built ${posts.length} posts + pages in ${Date.now() - started}ms → ${path.relative(root, DIST)}/`);
   if (missingGalleries.size) {
     console.log(`  Waiting for files in: ${[...missingGalleries].map((g) => `media/${g}/`).join(', ')}`);

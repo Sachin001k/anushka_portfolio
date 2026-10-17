@@ -826,3 +826,144 @@ main h1, main h2, main h3,
 body { min-height: 100vh; display: flex; flex-direction: column; }
 main { flex: 1; }
 .session-type__body { text-align: center; align-items: center; }
+
+/* =========================================================
+   Interactions
+   ========================================================= */
+
+/* Reveal on scroll (only when JS is running; see main.js) */
+.js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--reveal-delay, 0ms); }
+.js .reveal.is-visible { opacity: 1; transform: none; }
+
+/* Hero title rises in on load */
+@keyframes rise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+.js .hero__title { animation: rise 1s cubic-bezier(.2, .7, .2, 1) both; }
+
+/* Header gets a soft shadow once you scroll */
+.site-header { transition: box-shadow .3s; }
+.site-header.is-scrolled { box-shadow: 0 6px 24px rgba(2, 12, 6, .12); }
+
+/* Top-nav underline slides in on hover */
+.topnav a { position: relative; border-bottom: 0; }
+.topnav a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 1px; background: var(--mint);
+  transform: scaleX(0); transform-origin: left; transition: transform .25s ease;
+}
+.topnav a:hover::after, .topnav a[aria-current='page']::after { transform: scaleX(1); }
+
+/* Buttons: smooth lift */
+.btn, .socials a, .gallery__doc, .session-type, .post-card, .mini-card, .gallery__pdf { transition: transform .25s ease, box-shadow .25s ease, background-color .2s, color .2s, border-color .2s; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(2, 12, 6, .18); }
+.btn:active { transform: translateY(0); box-shadow: none; }
+:focus-visible { outline: 2px solid var(--green-600); outline-offset: 3px; }
+
+/* Cards lift on hover */
+.impact__card { transition: transform .3s ease, box-shadow .3s ease; }
+.impact__card:hover { transform: translateY(-6px); box-shadow: 0 16px 30px rgba(0, 0, 0, .25); }
+.session-type:hover, .mini-card:hover, .gallery__pdf:hover { transform: translateY(-6px); box-shadow: 0 16px 30px rgba(0, 0, 0, .18); }
+.post-card:hover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(8, 67, 30, .12); }
+
+/* Photos zoom gently on hover */
+.hero__gallery img, .head img, .post-card__img, .mini-card img, .session-type img, .session__photos img, .feature img, .partners__collage, .doctors .gallery__item img { transition: transform .5s ease; }
+.hero__gallery, .post-card, .mini-card, .session-type { overflow: hidden; }
+.head { overflow: visible; }
+.head img { will-change: transform; }
+.hero__gallery img:hover, .session__photos img:hover { transform: scale(1.03); }
+.head:hover img { transform: translateY(-6px); }
+.post-card:hover .post-card__img, .mini-card:hover img, .session-type:hover img { transform: scale(1.05); }
+.gallery__item { position: relative; cursor: zoom-in; }
+.gallery__item::after {
+  content: '⤢'; position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(2, 12, 6, .6); color: #fff; font-size: 16px;
+  opacity: 0; transform: scale(.8); transition: opacity .2s, transform .2s;
+}
+.gallery__item:hover::after, .gallery__item:focus-visible::after { opacity: 1; transform: none; }
+
+/* Photo viewer */
+.lightbox { overflow: visible; }
+.lightbox[open] { animation: menu-in .2s ease-out; }
+.lightbox__figure { margin: 0; display: flex; flex-direction: column; align-items: center; }
+.lightbox img { opacity: 0; transition: opacity .25s; }
+.lightbox img.is-loaded { opacity: 1; }
+.lightbox__nav {
+  position: fixed; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%;
+  border: 1px solid rgba(243, 241, 237, .4); background: rgba(2, 12, 6, .5); color: var(--cream);
+  font-size: 34px; line-height: 1; cursor: pointer; transition: background-color .2s;
+}
+.lightbox__nav:hover { background: var(--green-600); }
+.lightbox__nav--prev { left: 18px; }
+.lightbox__nav--next { right: 18px; }
+.lightbox__nav[hidden] { display: none; }
+
+/* Mobile menu items slide in one by one */
+.site-menu li { animation: rise .45s cubic-bezier(.2, .7, .2, 1) both; }
+.site-menu li:nth-child(2) { animation-delay: .04s; } .site-menu li:nth-child(3) { animation-delay: .08s; }
+.site-menu li:nth-child(4) { animation-delay: .12s; } .site-menu li:nth-child(5) { animation-delay: .16s; }
+.site-menu li:nth-child(6) { animation-delay: .2s; } .site-menu li:nth-child(7) { animation-delay: .24s; }
+.site-menu li:nth-child(8) { animation-delay: .28s; }
+.site-menu__social { color: var(--mint); text-decoration: none; font-size: 18px; letter-spacing: .06em; margin-bottom: 40px; }
+
+/* Back-to-top */
+.to-top {
+  position: fixed; right: 22px; bottom: 22px; z-index: 40; width: 46px; height: 46px; border-radius: 50%;
+  border: 0; background: var(--green-900); color: var(--cream); cursor: pointer; display: grid; place-items: center;
+  box-shadow: 0 6px 18px rgba(2, 12, 6, .25); transition: transform .2s, background-color .2s;
+  animation: rise .3s ease both;
+}
+.to-top:hover { transform: translateY(-3px); background: var(--green-600); }
+.to-top[hidden] { display: none; }
+
+/* Reading progress on blog posts */
+.read-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 60; background: var(--green-600);
+  transform: scaleX(0); transform-origin: left;
+}
+
+/* Blog search */
+.blog-search { margin-top: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.blog-search__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.blog-search__field {
+  flex: 1 1 320px; display: flex; align-items: center; gap: 10px; padding: 0 16px;
+  border: 1px solid rgba(8, 67, 30, .3); border-radius: 100px; background: #fff; color: var(--green-900);
+  transition: border-color .2s, box-shadow .2s;
+}
+.blog-search__field:focus-within { border-color: var(--green-600); box-shadow: 0 0 0 3px rgba(67, 111, 82, .18); }
+.blog-search input { flex: 1; border: 0; outline: 0; background: none; font: inherit; font-size: 16px; padding: 12px 0; color: var(--ink); }
+.blog-search__count { font-size: 14px; color: var(--green-600); }
+.blog-search__empty { margin-top: 30px; text-align: center; color: var(--green-900); font-size: 18px; }
+.post-list { margin-top: 30px; }
+.post-card[hidden] { display: none; }
+
+/* Footer */
+.site-footer { height: auto; color: var(--cream); }
+.site-footer__inner {
+  max-width: 1200px; margin: 0 auto; padding: 26px 24px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 28px;
+}
+.site-footer__brand { font-family: var(--f-display); font-variation-settings: 'opsz' 120; font-size: 24px; letter-spacing: -0.02em; }
+.site-footer__links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 24px; }
+.site-footer__links a { display: inline-flex; align-items: center; gap: 8px; color: var(--cream); text-decoration: none; font-size: 15px; }
+.site-footer__links a:hover { color: var(--mint); }
+.site-footer__copy { font-size: 13px; opacity: .7; }
+@media (max-width: 700px) {
+  .site-footer__inner { flex-direction: column; text-align: center; }
+  .site-footer__links { justify-content: center; }
+  .lightbox__nav { width: 42px; height: 42px; font-size: 28px; }
+  .lightbox__nav--prev { left: 8px; } .lightbox__nav--next { right: 8px; }
+}
+
+/* Form confirmation pulse */
+.join-form.is-sent .join-form__status { animation: rise .4s ease both; font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal { opacity: 1; transform: none; }
+}
+
+/* My Powai issues: one horizontally scrollable row */
+.press .gallery {
+  display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px;
+  scrollbar-color: var(--green-600) transparent;
+}
+.press .gallery > * { flex: 0 0 150px; scroll-snap-align: start; }
+.press__hint { font-size: 13px; color: var(--green-600); margin-top: 4px; }
+@media (max-width: 700px) { .press .gallery > * { flex-basis: 128px; } }

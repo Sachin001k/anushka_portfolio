@@ -13,7 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Dev builds go to .dev/ so they never clash with `npm run build` (dist/).
 const DIST = path.join(root, process.argv.includes('--no-watch') ? 'dist' : '.dev');
 const ASSETS = path.join(root, 'src', 'assets');
-const PORT = Number(process.env.PORT) || 3000;
+let port = Number(process.env.PORT) || 3000;
 const watch = !process.argv.includes('--no-watch');
 
 const TYPES = {
@@ -68,7 +68,13 @@ http
     }
     fs.createReadStream(file).pipe(res);
   })
-  .listen(PORT, () => console.log(`\n  Daily Digest running at http://localhost:${PORT}\n`));
+  .on('error', function (err) {
+    // Port taken (e.g. another project's dev server)? Try the next one.
+    if (err.code !== 'EADDRINUSE') throw err;
+    this.listen(++port);
+  })
+  .on('listening', () => console.log(`\n  Daily Digest running at http://localhost:${port}\n`))
+  .listen(port);
 
 if (watch) {
   let timer;

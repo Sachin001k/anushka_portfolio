@@ -28,7 +28,7 @@ For decades, wheat and rice dominated Indian plates, seen as the foundation of m
 
 For centuries, communities across India thrived on millets:
 
-- **Ragi (finger millet):** Strong bones, calcium-rich.Jowar (sorghum): Great for digestion, gluten-free.
+- **Ragi (finger millet):** Strong bones, calcium-rich. Jowar (sorghum): Great for digestion, gluten-free.
 - **Bajra (pearl millet):** Keeps you warm, boosts iron levels.
 - **Foxtail & little millets:** Protein-packed and diabetic-friendly.
 
