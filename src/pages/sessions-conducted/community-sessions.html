@@ -9,8 +9,13 @@ nav: sessions
   <p>Sessions led by our regional heads and community members, using The Daily Digest's resources to bring gut health awareness to their own schools and neighbourhoods.</p>
 </section>
 
-<section class="sessions sessions--gallery">
-  <div class="container">
-    {{gallery community-sessions}}
-  </div>
+<section class="sessions community">
+  <!-- To add a person: copy one <article> block, change the name and details,
+       and put their photos in media/community-<first>-<last>/ then run npm run images. -->
+  <article class="community__person">
+    <h2 class="display">Kashika Agrawal</h2>
+    <p class="community__meta">Regional Head · Singapore International School, Mumbai</p>
+    <p class="community__what">Online session: Gut Health Nutrition · 28 September 2026</p>
+    {{gallery community-kashika-agrawal}}
+  </article>
 </section>

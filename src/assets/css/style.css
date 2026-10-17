@@ -166,7 +166,7 @@ figure { margin: 0; }
   font-size: min(10.1vw, 145px);
   line-height: 1;
   letter-spacing: -0.04em;
-  padding-left: min(5.8vw, 84px);
+  text-align: center;
   margin-top: -0.05em;
   white-space: nowrap;
 }
@@ -205,7 +205,7 @@ figure { margin: 0; }
 .founder__text { padding: 34px 40px 40px 43px; display: flex; flex-direction: column; align-items: center; }
 .founder__title {
   color: var(--green-900); font-size: 79px; line-height: 1; letter-spacing: -0.02em;
-  max-width: 340px; align-self: flex-start; margin-left: 51px;
+  max-width: 420px; align-self: center; text-align: center;
 }
 .founder__text p {
   font-family: var(--f-serif); font-weight: var(--serif-w); font-size: 18px; line-height: 1.8; text-align: center;
@@ -535,7 +535,7 @@ figure { margin: 0; }
   .site-header__name { font-size: 17px; }
   .site-header__menu-btn { font-size: 19px; }
 
-  .founder__title { font-size: 60px; margin-left: 0; align-self: center; text-align: center; }
+  .founder__title { font-size: 60px; }
   .heads__grid { grid-template-columns: repeat(2, 287px); }
 
   .book__row, .feature { grid-template-columns: 1fr; justify-items: center; gap: 28px; }
@@ -773,3 +773,56 @@ figure { margin: 0; }
   .press .gallery { grid-template-columns: repeat(2, 1fr); }
   .session .gallery { grid-template-columns: 1fr 1fr; }
 }
+
+/* =========================================================
+   All headings centred
+   ========================================================= */
+main h1, main h2, main h3,
+.partners__title, .partners__place,
+.join h2, .contact, .blog__title,
+.supper-session__date, .community__meta, .community__what { text-align: center; }
+.join h2, .blog__title { padding-left: 0; margin-left: 0; margin-right: 0; }
+.partners__title { justify-self: center; }
+.partners__place { padding-left: 0; }
+.contact { padding-left: 0; }
+.session h2, .supper-session h2, .work__item h2, .session-type__title { margin-inline: auto; }
+.session h2 { max-width: none; }
+.s2 h2 { margin-left: auto; }
+/* Blog cards and article sub-headings stay left-aligned for readability */
+.post-card h2, .mini-card h3, .post__body h2, .post__body h3, .recent__head h2 { text-align: left; }
+
+/* LinkedIn under About The Founder */
+.socials { list-style: none; padding: 0; margin: 28px 0 0; display: flex; justify-content: center; gap: 16px; }
+.socials a {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+  color: var(--green-900); text-decoration: none; border: 1px solid var(--green-900); border-radius: 100px;
+  font-size: 16px; transition: background-color .2s, color .2s;
+}
+.socials a:hover { background: var(--green-900); color: var(--cream); }
+
+/* Testimonials */
+.testimonial figcaption { font-style: normal; }
+
+/* Community sessions */
+.community { padding: 40px 16px 70px; color: var(--cream); }
+.community__person { max-width: 980px; margin: 0 auto; }
+.community__person + .community__person { margin-top: 60px; padding-top: 50px; border-top: 1px solid rgba(243, 241, 237, .25); }
+.community__person h2 { font-size: 55px; line-height: 66px; letter-spacing: -0.02em; }
+.community__meta { font-size: 17px; margin-top: 4px; }
+.community__what { font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--mint); margin-top: 10px; }
+.community .gallery { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+
+/* Resources as thumbnails */
+.resources .gallery { grid-template-columns: repeat(auto-fill, minmax(200px, 230px)); justify-content: center; gap: 24px; margin-top: 36px; }
+
+@media (max-width: 700px) {
+  .community__person h2 { font-size: 36px; line-height: 44px; }
+  .resources .gallery { grid-template-columns: 1fr 1fr; }
+}
+.head__info { text-align: center; }
+.resources .gallery { grid-template-columns: repeat(4, minmax(0, 210px)); }
+@media (max-width: 1000px) { .resources .gallery { grid-template-columns: repeat(2, minmax(0, 210px)); } }
+/* keep the footer at the bottom on short pages */
+body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+.session-type__body { text-align: center; align-items: center; }
