@@ -140,7 +140,8 @@ const layout = withPartials(read(path.join(SRC, 'layout.html')))
 
 function renderNav(active) {
   return NAV.map(
-    (n) => `<li><a href="${n.href}"${n.key === active ? ' aria-current="page"' : ''}>${n.label}</a></li>`,
+    (n) =>
+      `<li${n.key === 'join' ? ' class="nav-cta"' : ''}><a href="${n.href}"${n.key === active ? ' aria-current="page"' : ''}>${n.label}</a></li>`,
   ).join('\n');
 }
 
