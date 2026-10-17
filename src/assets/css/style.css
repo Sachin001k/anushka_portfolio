@@ -1196,3 +1196,7 @@ main { flex: 1; }
   .pdfv__btn--wide span { display: none; }
   .pdfv__body { padding: 14px 8px 24px; }
 }
+.pdfv__page img { display: block; width: 100%; height: auto; opacity: 0; transition: opacity .3s; }
+.pdfv__page.is-loaded img { opacity: 1; }
+.pdfv__page:not(.is-loaded) { background: linear-gradient(110deg, #fff 30%, #f1f0ec 50%, #fff 70%) 0 0 / 200% 100%; animation: pdfv-shimmer 1.4s linear infinite; }
+@keyframes pdfv-shimmer { to { background-position: -200% 0; } }

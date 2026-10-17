@@ -17,6 +17,35 @@ import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { createRequire } from 'node:module';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+
+const FONT_DIR = createRequire(import.meta.url).resolve('pdfjs-dist/package.json').replace('package.json', 'standard_fonts/');
+const PAGE_WIDTH = 1400;
+
+// Render every page of a PDF to WebP images (<name>.pages/001.webp …) plus a manifest.
+// The in-site viewer shows these images, which load far faster than big PDFs.
+async function renderPages(pdfPath, outDir) {
+  const manifestPath = path.join(outDir, 'manifest.json');
+  if (isUpToDate(pdfPath, manifestPath)) return false;
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  const doc = await getDocument({ data: new Uint8Array(fs.readFileSync(pdfPath)), standardFontDataUrl: FONT_DIR, verbosity: 0 }).promise;
+  const sizes = [];
+  for (let n = 1; n <= doc.numPages; n++) {
+    const page = await doc.getPage(n);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: PAGE_WIDTH / base.width });
+    const { canvas, context } = doc.canvasFactory.create(Math.ceil(viewport.width), Math.ceil(viewport.height));
+    await page.render({ canvasContext: context, viewport, background: '#ffffff' }).promise;
+    await sharp(canvas.toBuffer('image/png')).webp({ quality: 76 }).toFile(path.join(outDir, `${String(n).padStart(3, '0')}.webp`));
+    sizes.push([Math.round(base.width), Math.round(base.height)]);
+    page.cleanup();
+  }
+  await doc.destroy();
+  fs.writeFileSync(manifestPath, JSON.stringify({ pages: doc.numPages, sizes }));
+  return true;
+}
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MEDIA = path.join(root, 'media');
@@ -64,6 +93,11 @@ for (const gallery of fs.readdirSync(MEDIA, { withFileTypes: true })) {
         } catch {
           console.warn(`  (no cover preview for ${file})`);
         }
+      }
+      try {
+        if (await renderPages(dest, path.join(outDir, `${base}.pages`))) console.log(`    ↳ pages rendered for the viewer`);
+      } catch (err) {
+        console.warn(`  (could not render pages of ${file}: ${err.message})`);
       }
       console.log(`  ${gallery.name}/${base}.pdf`);
       count++;

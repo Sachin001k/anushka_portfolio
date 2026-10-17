@@ -91,7 +91,7 @@ function galleryFiles(name) {
   return fs.existsSync(dir)
     ? fs
         .readdirSync(dir)
-        .filter((f) => !f.startsWith('.') && !f.endsWith('.thumb.webp'))
+        .filter((f) => !f.startsWith('.') && !f.endsWith('.thumb.webp') && !f.endsWith('.pages'))
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
     : [];
 }
@@ -290,6 +290,23 @@ function copyDir(from, to) {
   }
 }
 
+// /assets/pdf-pages.json: which PDFs have pre-rendered page images for the viewer.
+function writePdfPagesIndex() {
+  const index = {};
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory() && e.name.endsWith('.pages') && fs.existsSync(path.join(full, 'manifest.json'))) {
+        const rel = '/' + path.relative(SRC, full).split(path.sep).join('/');
+        index[rel.replace(/\.pages$/, '.pdf')] = { dir: rel, ...JSON.parse(read(path.join(full, 'manifest.json'))) };
+      } else if (e.isDirectory()) walk(full);
+    }
+  };
+  walk(path.join(SRC, 'assets'));
+  const out = path.join(process.env.SKIP_ASSETS ? SRC : DIST, 'assets', 'pdf-pages.json');
+  fs.writeFileSync(out, JSON.stringify(index));
+}
+
 export function build() {
   const started = Date.now();
   fs.rmSync(DIST, { recursive: true, force: true });
@@ -305,6 +322,7 @@ export function build() {
       .map((u) => `  <url><loc>${SITE.url}${u}</loc></url>`)
       .join('\n')}\n</urlset>\n`,
   );
+  writePdfPagesIndex();
   fs.writeFileSync(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE.url}/sitemap.xml\n`);
   console.log(`Built ${posts.length} posts + pages in ${Date.now() - started}ms → ${path.relative(root, DIST)}/`);
   if (missingGalleries.size) {

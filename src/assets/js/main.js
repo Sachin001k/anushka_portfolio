@@ -381,29 +381,45 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
     zoomEl.textContent = `${Math.round(zoom * 100)}%`;
   }
 
-  // Fetch the PDF in pieces (HTTP range requests) so only the pages being viewed
-  // are downloaded. The host compresses whole-file downloads, which would otherwise
-  // force PDF.js to fetch the entire file first. Falls back to a plain URL.
-  const CHUNK = 256 * 1024;
-  async function sourceFor(pdfjs, url) {
-    try {
-      const first = await fetch(url, { headers: { Range: `bytes=0-${CHUNK - 1}` } });
-      const total = Number((first.headers.get('Content-Range') || '').split('/')[1]);
-      if (first.status !== 206 || !total) throw new Error('no ranges');
-      const initial = new Uint8Array(await first.arrayBuffer());
-      if (initial.length >= total) return { data: initial };
-      const transport = new pdfjs.PDFDataRangeTransport(total, initial);
-      transport.requestDataRange = (begin, end) => {
-        fetch(url, { headers: { Range: `bytes=${begin}-${end - 1}` } })
-          .then((r) => r.arrayBuffer())
-          .then((buf) => transport.onDataRange(begin, new Uint8Array(buf)))
-          .catch(() => {});
-      };
-      return { range: transport, rangeChunkSize: CHUNK, disableAutoFetch: true };
-    } catch {
-      return { url, disableAutoFetch: true };
-    }
+  // Pre-rendered page images (made by `npm run images`) load much faster than the PDF itself.
+  let pagesIndexPromise;
+  const pagesIndex = () =>
+    (pagesIndexPromise ||= fetch('/assets/pdf-pages.json')
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => ({})));
+
+  function showImagePages(entry) {
+    observer?.disconnect();
+    pageObserver?.disconnect();
+    wrap.replaceChildren();
+    const width = baseWidth() * zoom;
+    entry.sizes.forEach(([w, h], i) => {
+      const slot = document.createElement('div');
+      slot.className = 'pdfv__page';
+      slot.dataset.page = i + 1;
+      slot.style.width = `${width}px`;
+      slot.style.aspectRatio = `${w} / ${h}`;
+      const img = document.createElement('img');
+      img.src = `${entry.dir}/${String(i + 1).padStart(3, '0')}.webp`;
+      img.alt = `Page ${i + 1}`;
+      img.decoding = 'async';
+      if (i > 1) img.loading = 'lazy';
+      img.onload = () => slot.classList.add('is-loaded');
+      slot.append(img);
+      wrap.appendChild(slot);
+    });
+    pageObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) pagesEl.textContent = `Page ${visible.target.dataset.page} of ${entry.pages}`;
+      },
+      { root: body, threshold: [0.25, 0.5, 0.75] },
+    );
+    wrap.querySelectorAll('.pdfv__page').forEach((el) => pageObserver.observe(el));
+    zoomEl.textContent = `${Math.round(zoom * 100)}%`;
   }
+
+  let imageEntry = null;
 
   async function open(a) {
     currentHref = a.href;
@@ -418,8 +434,18 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
     document.documentElement.classList.add('menu-open');
     body.scrollTop = 0;
     try {
+      const entry = (await pagesIndex())[new URL(a.href).pathname];
+      if (entry) {
+        if (currentHref !== a.href) return;
+        imageEntry = entry;
+        status.hidden = true;
+        pagesEl.textContent = `Page 1 of ${entry.pages}`;
+        showImagePages(entry);
+        return;
+      }
+      imageEntry = null;
       const pdfjs = await loadPdfjs();
-      loadingTask = pdfjs.getDocument(await sourceFor(pdfjs, a.href));
+      loadingTask = pdfjs.getDocument({ url: a.href, disableAutoFetch: true });
       loadingTask.onProgress = ({ loaded, total }) => {
         if (total && loaded < total) msg.textContent = `Loading… ${Math.round((loaded / total) * 100)}%`;
       };
@@ -441,6 +467,7 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
     pageObserver?.disconnect();
     loadingTask?.destroy();
     doc = null;
+    imageEntry = null;
     loadingTask = null;
     currentHref = '';
     wrap.replaceChildren();
@@ -453,10 +480,10 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
       open(a);
     });
     // start fetching the library as soon as someone shows intent
-    a.addEventListener('pointerenter', loadPdfjs, { once: true });
+    a.addEventListener('pointerenter', pagesIndex, { once: true });
   });
   // …or quietly in the background once the page has finished loading
-  window.addEventListener('load', () => (window.requestIdleCallback || setTimeout)(() => loadPdfjs(), { timeout: 3000 }));
+  window.addEventListener('load', () => (window.requestIdleCallback || setTimeout)(() => pagesIndex(), { timeout: 3000 }));
 
   dialog.addEventListener('close', () => {
     document.documentElement.classList.remove('menu-open');
@@ -468,11 +495,12 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
   dialog.querySelector('[data-act="close"]').addEventListener('click', () => dialog.close());
 
   const setZoom = (z) => {
-    if (!doc) return;
+    if (!doc && !imageEntry) return;
     const ratio = body.scrollTop / Math.max(1, body.scrollHeight);
     zoom = Math.min(2.5, Math.max(0.5, Math.round(z * 100) / 100));
     const first = wrap.firstElementChild;
-    layoutPages(first?.style.aspectRatio || '3 / 4');
+    if (imageEntry) showImagePages(imageEntry);
+    else layoutPages(first?.style.aspectRatio || '3 / 4');
     body.scrollTop = ratio * body.scrollHeight;
   };
   dialog.querySelector('[data-act="in"]').addEventListener('click', () => setZoom(zoom + 0.25));
@@ -483,7 +511,7 @@ document.querySelectorAll('[data-copy-link]').forEach((el) => {
   });
   let resizeTimer;
   window.addEventListener('resize', () => {
-    if (!dialog.open || !doc) return;
+    if (!dialog.open || (!doc && !imageEntry)) return;
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => setZoom(zoom), 200);
   });
