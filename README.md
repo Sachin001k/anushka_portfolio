@@ -1,4 +1,4 @@
-# The Daily Digest
+# The Daily Digest 
 
 Anushka Bahorey's science and gut-health website. This repo replaces the old Wix site
 (anushkabahorey.wixsite.com/daily-digest) with plain HTML/CSS/JS and a small Node build script.
@@ -112,17 +112,6 @@ After the first deploy:
 - Submissions appear in Netlify under **Forms → community-head**.
 - To get them by email, open **Forms → Form notifications → Add notification → Email notification**
   and enter `anushkabahorey@gmail.com`.
-
-The form only works on the deployed Netlify site. Locally, it shows an error message when submitted.
-
-### After moving
-
-- Old Wix links keep working: `/research-hub` redirects to `/cookbook/` and `/about` to `/join-us/` (see `netlify.toml`).
-- Update `SITE.url` in `scripts/build.js` to the new address so the blog share buttons link to the right place.
-- The old Wix site and the PDFs hosted there are no longer needed. Everything is in this repo.
-
-## Interactive features
-
 All in `src/assets/js/main.js` and the "Interactions" part of `style.css`. The site still works fully
 without JavaScript, and animations switch off for visitors who've turned on "reduce motion".
 
@@ -136,12 +125,3 @@ without JavaScript, and animations switch off for visitors who've turned on "red
   `npm run images` pre-renders each PDF's pages as images (`<name>.pages/`), so even the 20 MB magazines open
   in about a second. A PDF added without running it still opens, using PDF.js (slower for big files).
 
-## Differences from the Wix version
-
-- Fonts are free Google Fonts: Fraunces, Figtree, EB Garamond, Aboreto and Jost.
-  The Wix fonts (Avenir, Adobe Caslon, Futura) are licensed to Wix and can't be reused.
-  The replacements were matched against the original text widths.
-- Blog view counts, likes and comments were Wix features and have been removed.
-  The share buttons are kept.
-- The Wix site had no real mobile layout. This version adapts to phones and tablets.
-- Images are converted to WebP and resized: about 4 MB in total, down from roughly 130 MB of originals.
